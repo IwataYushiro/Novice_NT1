@@ -40,9 +40,26 @@ int lifeB = 3;
 enum class Scene {
 
 	S_Title,
-	S_Game
+	S_Game,
+	S_Result,
 };
 Scene scene = Scene::S_Title;
+
+void Reset() {
+	a.center.x = 200.0f;
+	a.center.y = 400.0f;
+	a.radius = 50.0f;
+
+	bulletA.center.x = a.center.x + 100.0f;
+	bulletA.center.y = a.center.y;
+	bulletA.radius = 20.0f;
+
+	colorB = BLUE;
+
+	lifeB = 3;
+
+	isShot = false;
+}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -66,9 +83,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	uint32_t title = 1;
 	title = TextureManager::Load("title.png");
+	uint32_t winR = 2;
+	winR = TextureManager::Load("redwin.png");
+	uint32_t winB = 3;
+	winB = TextureManager::Load("bluewin.png");
 
 	Sprite* sTitle = nullptr;
 	sTitle = Sprite::Create(title, {100.0f, 100.0f});
+	
+	Sprite* sRedWin = nullptr;
+	sRedWin = Sprite::Create(winR, {100.0f, 100.0f});
+
+	Sprite* sBlueWin = nullptr;
+	sBlueWin = Sprite::Create(winB, {100.0f, 100.0f});
 
 	// winsock初期化
 	WSAStartup(MAKEWORD(2, 0), &wdData);
@@ -88,10 +115,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		switch (scene) {
 		case Scene::S_Title:
-			if (keys[DIK_SPACE] != 0) {
+			Reset();
+			if (keys[DIK_SPACE] != 0 && preKeys[DIK_SPACE] == 0) {
 				scene = Scene::S_Game;
+				break;
 			}
-
 			break;
 		case Scene::S_Game:
 			if (keys[DIK_UP] != 0 || keys[DIK_W] != 0) {
@@ -113,9 +141,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					isShot = false;
 				}
 			}
+
+			if (lifeB == 0) {
+				scene = Scene::S_Result;
+				break;
+			}
 			break;
-		default:
+		case Scene::S_Result:
+			
+			if (keys[DIK_SPACE] != 0) {
+				
+				scene = Scene::S_Title;
+				break;
+			}
 			break;
+		
 		}
 
 		///
@@ -183,6 +223,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		case Scene::S_Game:
 			break;
+		case Scene::S_Result:
+			// 前景スプライト描画前処理
+			Sprite::PreDraw(commandList);
+
+			/// <summary>
+			/// ここに前景スプライトの描画処理を追加できる
+			/// </summary>
+			if (lifeA <= 0)
+				sBlueWin->Draw();
+			if (lifeB <= 0)
+				sRedWin->Draw();
+
+			//
+			// スプライト描画後処理
+			Sprite::PostDraw();
+			break;
 		}
 		Novice::DrawEllipse(
 		  (int)a.center.x, (int)a.center.y, (int)a.radius, (int)a.radius, 0.0f, colorA,
@@ -214,6 +270,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ライブラリの終了
 	Novice::Finalize();
 	delete sTitle;
+	delete sRedWin;
+	delete sBlueWin;
 
 	// winsock終了
 	WSACleanup();

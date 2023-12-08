@@ -19,8 +19,8 @@
 
 namespace {
 
-const std::wstring kResourceRoot = L"C:/KamataEngine/DirectXGame/Resources/";
-const std::string kResourceRootChar = "C:/KamataEngine/DirectXGame/Resources/";
+const std::wstring kResourceRoot = L"C:/KamataEngine/Novice_Client/Resources/";
+const std::string kResourceRootChar = "C:/KamataEngine/Novice_Client/Resources/";
 const WORD kXInputButtons[] = {
   XINPUT_GAMEPAD_DPAD_UP,
   XINPUT_GAMEPAD_DPAD_DOWN,

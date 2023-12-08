@@ -21,6 +21,8 @@ typedef struct {
 } Circle;
 
 Circle a, b;
+Circle bulletA, bulletB;
+
 Vector2 center = {100, 100};
 char keys[256] = {0};
 char preKeys[256] = {0};
@@ -46,6 +48,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	b.center.y = 400;
 	b.radius = 50;
 
+
 	// winsock初期化
 	WSAStartup(MAKEWORD(2, 0), &wdData);
 
@@ -62,16 +65,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		memcpy(preKeys, keys, 256);
 		Novice::GetHitKeyStateAll(keys);
 
-		if (keys[DIK_UP] != 0) {
+		if (keys[DIK_UP] != 0 || keys[DIK_W] != 0) {
 			b.center.y -= 5;
-		}
-		if (keys[DIK_DOWN] != 0) {
+		} else if (keys[DIK_DOWN] != 0 || keys[DIK_S] != 0) {
 			b.center.y += 5;
-		}
-		if (keys[DIK_RIGHT] != 0) {
+		} else if (keys[DIK_RIGHT] != 0 || keys[DIK_D] != 0) {
 			b.center.x += 5;
-		}
-		if (keys[DIK_LEFT] != 0) {
+		} else if (keys[DIK_LEFT] != 0 || keys[DIK_A] != 0) {
 			b.center.x -= 5;
 		}
 

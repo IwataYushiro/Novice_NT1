@@ -62,17 +62,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		memcpy(preKeys, keys, 256);
 		Novice::GetHitKeyStateAll(keys);
 
-		if (keys[DIK_UP] != 0) {
-			a.center.y -= 5;
-		}
-		if (keys[DIK_DOWN] != 0) {
-			a.center.y += 5;
-		}
-		if (keys[DIK_RIGHT] != 0) {
-			a.center.x += 5;
-		}
-		if (keys[DIK_LEFT] != 0) {
-			a.center.x -= 5;
+		if (keys[DIK_UP] != 0 || keys[DIK_W] != 0) {
+			b.center.y -= 5;
+		} else if (keys[DIK_DOWN] != 0 || keys[DIK_S] != 0) {
+			b.center.y += 5;
+		} else if (keys[DIK_RIGHT] != 0 || keys[DIK_D] != 0) {
+			b.center.x += 5;
+		} else if (keys[DIK_LEFT] != 0 || keys[DIK_A] != 0) {
+			b.center.x -= 5;
 		}
 
 		///

@@ -21,10 +21,14 @@ typedef struct {
 } Circle;
 
 Circle a, b;
+Circle bulletA, bulletB;
+bool isShot = false;
+
 Vector2 center = {100, 100};
 char keys[256] = {0};
 char preKeys[256] = {0};
-int color = RED;
+int color1 = RED;
+int color2 = BLUE;
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -63,27 +67,55 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Novice::GetHitKeyStateAll(keys);
 
 		if (keys[DIK_UP] != 0 || keys[DIK_W] != 0) {
-			b.center.y -= 5;
+			a.center.y -= 5;
 		} else if (keys[DIK_DOWN] != 0 || keys[DIK_S] != 0) {
-			b.center.y += 5;
+			a.center.y += 5;
 		} else if (keys[DIK_RIGHT] != 0 || keys[DIK_D] != 0) {
-			b.center.x += 5;
+			a.center.x += 5;
 		} else if (keys[DIK_LEFT] != 0 || keys[DIK_A] != 0) {
-			b.center.x -= 5;
+			a.center.x -= 5;
 		}
 
+		if (keys[DIK_SPACE] != 0) {
+			isShot = true;
+		}
+
+		if (isShot) {
+			if (bulletA.center.x >= 1000) {
+				isShot = false;
+			}
+		}
 		///
 		/// ↓更新処理ここから
 		///
+		// 弾の座標を同期
+		
 
-		float distance = sqrtf(
-		  (float)pow((double)a.center.x - (double)b.center.x, 2) +
-		  (float)pow((double)a.center.y - (double)b.center.y, 2));
+		if (!isShot) {
+			bulletA.center.x = a.center.x + 100;
+			bulletA.center.y = a.center.y;
+			bulletA.radius = 20;
+			
+		} else {
+			const int speed = 10;
+			bulletA.center.x += speed;
+		}
+		bulletB.center.x = b.center.x - 100;
+			bulletB.center.y = b.center.y;
+			bulletB.radius = 20;
 
-		if (distance <= a.radius + b.radius) {
-			color = BLUE;
-		} else
-			color = RED;
+		float distanceA = sqrtf(
+		      (float)pow((double)a.center.x - (double)bulletB.center.x, 2) +
+		      (float)pow((double)a.center.y - (double)bulletB.center.y, 2));
+
+		    float distanceB = sqrtf(
+		      (float)pow((double)b.center.x - (double)bulletA.center.x, 2) +
+		      (float)pow((double)b.center.y - (double)bulletA.center.y, 2));
+
+		    if (distanceB <= b.radius + bulletA.radius) {
+			color2 = RED;
+		    } else
+			color2 = BLUE;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -91,12 +123,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		Novice::DrawEllipse(
-		  (int)a.center.x, (int)a.center.y, (int)a.radius, (int)a.radius, 0.0f, WHITE,
-		  kFillModeSolid);
-		Novice::DrawEllipse(
-		  (int)b.center.x, (int)b.center.y, (int)b.radius, (int)b.radius, 0.0f, color,
-		  kFillModeSolid);
+		    Novice::DrawEllipse(
+		      (int)a.center.x, (int)a.center.y, (int)a.radius, (int)a.radius, 0.0f, color1,
+		      kFillModeSolid);
+		    Novice::DrawEllipse(
+		      (int)b.center.x, (int)b.center.y, (int)b.radius, (int)b.radius, 0.0f, color2,
+		      kFillModeSolid);
+
+		    Novice::DrawEllipse(
+		      (int)bulletA.center.x, (int)bulletA.center.y, (int)bulletA.radius,
+		      (int)bulletA.radius, 0.0f, WHITE, kFillModeSolid);
+		    Novice::DrawEllipse(
+		      (int)bulletB.center.x, (int)bulletB.center.y, (int)bulletB.radius,
+		      (int)bulletB.radius, 0.0f, WHITE, kFillModeSolid);
+
 		///
 		/// ↑描画処理ここまで
 		///
@@ -149,11 +189,19 @@ DWORD WINAPI Threadfunc(void* px) {
 	while (1) {
 		// データ送信
 		send(sConnect, (const char*)&a, sizeof(Circle), 0);
+		send(sConnect, (const char*)&bulletA, sizeof(Circle), 0);
+		send(sConnect, (const char*)&color2, sizeof(int), 0);
 
 		// データ受信
 		int nRcv = recv(sConnect, (char*)&b, sizeof(Circle), 0);
+		int nRcvB = recv(sConnect, (char*)&bulletB, sizeof(Circle), 0);
+		int nRcvCol1 = recv(sConnect, (char*)&color1, sizeof(int), 0);
 
 		if (nRcv == SOCKET_ERROR)
+			break;
+		if (nRcvB == SOCKET_ERROR)
+			break;
+		if (nRcvCol1 == SOCKET_ERROR)
 			break;
 	}
 

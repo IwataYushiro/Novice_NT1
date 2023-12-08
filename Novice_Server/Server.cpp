@@ -22,11 +22,13 @@ typedef struct {
 
 Circle a, b;
 Circle bulletA, bulletB;
+bool isShot = false;
 
 Vector2 center = {100, 100};
 char keys[256] = {0};
 char preKeys[256] = {0};
-int color = RED;
+int color1 = RED;
+int color2 = BLUE;
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -47,7 +49,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	b.center.x = 800;
 	b.center.y = 400;
 	b.radius = 50;
-
 
 	// winsock初期化
 	WSAStartup(MAKEWORD(2, 0), &wdData);
@@ -75,18 +76,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			b.center.x -= 5;
 		}
 
+		if (keys[DIK_SPACE] != 0 ) {
+			isShot = true;
+		}
+
+		if (isShot) {
+			if (bulletB.center.x <= 0)
+			{
+				isShot = false;
+			}
+		}
+
 		///
 		/// ↓更新処理ここから
 		///
+		//弾の座標を同期
+		bulletA.center.x = a.center.x + 100;
+		bulletA.center.y = a.center.y;
+		bulletA.radius = 20;
 
-		float distance = sqrtf(
-		  (float)pow((double)a.center.x - (double)b.center.x, 2) +
-		  (float)pow((double)a.center.y - (double)b.center.y, 2));
+		if (!isShot) {
+			bulletB.center.x = b.center.x - 100;
+			bulletB.center.y = b.center.y;
+			bulletB.radius = 20;
+		} 
+		else {
+			const int speed = 10;
+			bulletB.center.x -= speed;
+		}
+		
 
-		if (distance <= a.radius + b.radius) {
-			color = BLUE;
-		} else
-			color = RED;
+		float distanceA = sqrtf(
+		  (float)pow((double)a.center.x - (double)bulletB.center.x, 2) +
+		  (float)pow((double)a.center.y - (double)bulletB.center.y, 2));
+
+		float distanceB = sqrtf(
+		  (float)pow((double)b.center.x - (double)bulletA.center.x, 2) +
+		  (float)pow((double)b.center.y - (double)bulletA.center.y, 2));
+
+		if (distanceA <= a.radius + bulletB.radius) {
+			color1 = BLUE;
+		} 
+		else color1 = RED;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -95,10 +126,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		Novice::DrawEllipse(
-		  (int)a.center.x, (int)a.center.y, (int)a.radius, (int)a.radius, 0.0f, WHITE,
+		  (int)a.center.x, (int)a.center.y, (int)a.radius, (int)a.radius, 0.0f, color1,
 		  kFillModeSolid);
 		Novice::DrawEllipse(
-		  (int)b.center.x, (int)b.center.y, (int)b.radius, (int)b.radius, 0.0f, color,
+		  (int)b.center.x, (int)b.center.y, (int)b.radius, (int)b.radius, 0.0f, color2,
+		  kFillModeSolid);
+		
+		Novice::DrawEllipse(
+		  (int)bulletA.center.x, (int)bulletA.center.y, (int)bulletA.radius, (int)bulletA.radius, 0.0f, WHITE,
+		  kFillModeSolid);
+		Novice::DrawEllipse(
+		  (int)bulletB.center.x, (int)bulletB.center.y, (int)bulletB.radius, (int)bulletB.radius, 0.0f, WHITE,
 		  kFillModeSolid);
 		///
 		/// ↑描画処理ここまで
@@ -173,12 +211,20 @@ DWORD WINAPI Threadfunc(void* px) {
 	while (1) {
 		// データ受信
 		int nRcv = recv(sConnect, (char*)&a, sizeof(Circle), 0);
-
+		int nRcvB = recv(sConnect, (char*)&bulletA, sizeof(Circle), 0);
+		int nRcvCol2 = recv(sConnect, (char*)&color2, sizeof(int), 0);
+		
 		if (nRcv == SOCKET_ERROR)
+			break;
+		if (nRcvB == SOCKET_ERROR)
+			break;
+		if (nRcvCol2 == SOCKET_ERROR)
 			break;
 
 		// データ送信
 		send(sConnect, (const char*)&b, sizeof(Circle), 0);
+		send(sConnect, (const char*)&bulletB, sizeof(Circle), 0);
+		send(sConnect, (const char*)&color1, sizeof(int), 0);
 	}
 
 	shutdown(sConnect, 2);
